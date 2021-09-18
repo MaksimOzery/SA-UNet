@@ -6,9 +6,11 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 np.random.seed(42)
 import scipy.misc as mc
 import matplotlib.pyplot as plt
-data_location = ''
-training_images_loc = data_location + 'CHASE/train/imageS/'
-training_label_loc = data_location + 'CHASE/train/labelS/'
+import imageio
+
+data_location = 'C:/Users/maksim/SA-UNet/'
+training_images_loc = data_location + 'CHASE/train/image/'
+training_label_loc = data_location + 'CHASE/train/label/'
 validate_images_loc = data_location + 'CHASE/validate/images/'
 validate_label_loc = data_location + 'CHASE/validate/labels/'
 train_files = os.listdir(training_images_loc)
@@ -20,8 +22,8 @@ validate_label = []
 desired_size=1008
 
 for i in train_files:
-    im = mc.imread(training_images_loc + i)
-    label = mc.imread(training_label_loc + i.split('_')[0]+"_"+i.split('_')[1].split(".")[0] +"_1stHO.png" ,mode="L")
+    im = imageio.imread(training_images_loc + i)
+    label = imageio.imread(training_label_loc + i.split('_')[0]+"_"+i.split('_')[1].split(".")[0] +"_1stHO.png" ,pilmode="L")
     old_size = im.shape[:2]  # old_size is in (height, width) format
     delta_w = desired_size - old_size[1]
     delta_h = desired_size - old_size[0]
@@ -47,8 +49,8 @@ for i in train_files:
 
 
 for i in validate_files:
-    im = mc.imread(validate_images_loc + i)
-    label = mc.imread(validate_label_loc +i.split('_')[0]+'_'+ i.split('_')[1].split(".")[0] +"_1stHO.png" ,mode="L")
+    im = imageio.imread(validate_images_loc + i)
+    label = imageio.imread(validate_label_loc +i.split('_')[0]+'_'+ i.split('_')[1].split(".")[0] +"_1stHO.png" ,pilmode="L")
     old_size = im.shape[:2]  # old_size is in (height, width) format
     delta_w = desired_size - old_size[1]
     delta_h = desired_size - old_size[0]
@@ -111,8 +113,8 @@ history=model.fit(x_train, y_train,
                 batch_size=2,
                 # validation_split=0.1,
                 validation_data=(x_validate, y_validate),
-                shuffle=True,
-                callbacks= [TensorBoard(log_dir='./autoencoder'), model_checkpoint])
+                shuffle=True
+                )
 
 
 print(history.history.keys())
