@@ -4,11 +4,13 @@ import numpy as np
 import cv2
 from keras.callbacks import TensorBoard, ModelCheckpoint
 np.random.seed(42)
-import scipy.misc as mc
+import tensorflow as tf
+import imageio as mc
+
 import matplotlib.pyplot as plt
 data_location = ''
-training_images_loc = data_location + 'CHASE/train/imageS/'
-training_label_loc = data_location + 'CHASE/train/labelS/'
+training_images_loc = data_location + 'CHASE/train/image/'
+training_label_loc = data_location + 'CHASE/train/label/'
 validate_images_loc = data_location + 'CHASE/validate/images/'
 validate_label_loc = data_location + 'CHASE/validate/labels/'
 train_files = os.listdir(training_images_loc)
@@ -19,9 +21,15 @@ validate_data = []
 validate_label = []
 desired_size=1008
 
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+if len(physical_devices) > 0:
+   tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+
+
 for i in train_files:
     im = mc.imread(training_images_loc + i)
-    label = mc.imread(training_label_loc + i.split('_')[0]+"_"+i.split('_')[1].split(".")[0] +"_1stHO.png" ,mode="L")
+    label = mc.imread(training_label_loc + i.split('_')[0]+"_"+i.split('_')[1].split(".")[0] +"_1stHO.png" , as_gray=True)
     old_size = im.shape[:2]  # old_size is in (height, width) format
     delta_w = desired_size - old_size[1]
     delta_h = desired_size - old_size[0]
@@ -48,7 +56,7 @@ for i in train_files:
 
 for i in validate_files:
     im = mc.imread(validate_images_loc + i)
-    label = mc.imread(validate_label_loc +i.split('_')[0]+'_'+ i.split('_')[1].split(".")[0] +"_1stHO.png" ,mode="L")
+    label = mc.imread(validate_label_loc +i.split('_')[0]+'_'+ i.split('_')[1].split(".")[0] +"_1stHO.png" , as_gray=True)
     old_size = im.shape[:2]  # old_size is in (height, width) format
     delta_w = desired_size - old_size[1]
     delta_h = desired_size - old_size[0]
@@ -89,8 +97,8 @@ y_validate = validate_label.astype('float32') / 255.
 x_validate = np.reshape(x_validate, (len(x_validate), desired_size, desired_size, 3))  # adapt this if using `channels_first` image data format
 y_validate = np.reshape(y_validate, (len(y_validate), desired_size, desired_size, 1))  # adapt this if using `channels_first` im
 
-
-TensorBoard(log_dir='./autoencoder', histogram_freq=0,
+logdir_path = os.path.join(r'C:\Users\maksimPC\SA-UNet\autoencoder', 'model1')
+TensorBoard(log_dir=logdir_path, histogram_freq=0,
             write_graph=True, write_images=True)
 
 from  SA_UNet import *
@@ -104,21 +112,23 @@ if restore and os.path.isfile(weight):
 
 model_checkpoint = ModelCheckpoint(weight, monitor='val_accuracy', verbose=1, save_best_only=False)
 
-# plot_model(model, to_file='unet_resnet.png', show_shapes=False, show_layer_names=)
 
+
+# plot_model(model, to_file='unet_resnet.png', show_shapes=False, show_layer_names=)
+'''
 history=model.fit(x_train, y_train,
-                epochs=100, #first  100 with lr=1e-3,,and last 50 with lr=1e-4
+                epochs=20, #first  100 with lr=1e-3,,and last 50 with lr=1e-4
                 batch_size=2,
                 # validation_split=0.1,
                 validation_data=(x_validate, y_validate),
                 shuffle=True,
-                callbacks= [TensorBoard(log_dir='./autoencoder'), model_checkpoint])
-
+                callbacks= [TensorBoard(log_dir=logdir_path), model_checkpoint])
+'''
 
 print(history.history.keys())
 
 # summarize history for accuracy
-plt.plot(history.history['acc'])
+plt.plot(history.history['accuracy'])
 plt.plot(history.history['val_accuracy'])
 plt.title('SA-UNet Accuracy')
 plt.ylabel('accuracy')
